@@ -1,35 +1,37 @@
-val analysisApiKotlinVersion = "2.0.20-dev-3728"
-val intellijVersion = "213.7172.25"
+plugins {
+    application
+}
+
+// Kotlin 2.1.20 - detektと同様の構成
+// 参照: https://github.com/detekt/detekt/blob/main/gradle/libs.versions.toml
+val kotlinVersion = "2.1.20"
+
+application {
+    mainClass.set("io.github.sonarkt.MainKt")
+}
 
 repositories {
-    maven("https://packages.jetbrains.team/maven/p/ij/intellij-dependencies")
-    maven("https://maven.pkg.jetbrains.space/kotlin/p/kotlin/kotlin-ide-plugin-dependencies")
-    maven("https://maven.pkg.jetbrains.space/kotlin/p/kotlin/bootstrap")
-    maven("https://www.jetbrains.com/intellij-repository/releases")
+    mavenCentral()
+    // Kotlin Analysis API用 (KT-56203が解決されるまで必要)
+    maven("https://redirector.kotlinlang.org/maven/intellij-dependencies")
 }
 
 dependencies {
-    /**
-     * Kotlin Analysis APIはBOMが整備されておらず、直接的な依存関係を手動で設定する必要がある。
-     * "https://github.com/fwcd/kotlin-analysis-server/blob/main/build.gradle.kts"を参照して依存関係を調整。
-     */
-    // IntelliJ Platform APIs
-    implementation("com.jetbrains.intellij.platform:core:$intellijVersion")
-    implementation("com.jetbrains.intellij.platform:core-impl:$intellijVersion")
-    implementation("com.jetbrains.intellij.platform:util:$intellijVersion")
+    // Kotlin Compiler (PSIクラスを含む)
+    implementation("org.jetbrains.kotlin:kotlin-compiler:$kotlinVersion")
 
-    // Kotlin Compiler
-    implementation("org.jetbrains.kotlin:kotlin-compiler:$analysisApiKotlinVersion")
+    // Caffeine - Analysis APIのキャッシュに必要
+    implementation("com.github.ben-manes.caffeine:caffeine:2.9.3")
 
-    // Kotlin Analysis API
-    implementation("org.jetbrains.kotlin:high-level-api-fir-for-ide:$analysisApiKotlinVersion") { isTransitive = false }
-    implementation("org.jetbrains.kotlin:high-level-api-for-ide:$analysisApiKotlinVersion") { isTransitive = false }
-    implementation("org.jetbrains.kotlin:low-level-api-fir-for-ide:$analysisApiKotlinVersion") { isTransitive = false }
-    implementation("org.jetbrains.kotlin:analysis-api-providers-for-ide:$analysisApiKotlinVersion") { isTransitive = false }
-    implementation("org.jetbrains.kotlin:analysis-project-structure-for-ide:$analysisApiKotlinVersion") { isTransitive = false }
-    implementation("org.jetbrains.kotlin:symbol-light-classes-for-ide:$analysisApiKotlinVersion") { isTransitive = false }
-    implementation("org.jetbrains.kotlin:analysis-api-standalone-for-ide:$analysisApiKotlinVersion") { isTransitive = false }
-    implementation("org.jetbrains.kotlin:high-level-api-impl-base-for-ide:$analysisApiKotlinVersion") { isTransitive = false }
+    // Kotlin Analysis API - detektの構成に基づく
+    // -for-ide アーティファクトはシャドウ(全依存関係を内包)されているため isTransitive = false が必要
+    implementation("org.jetbrains.kotlin:analysis-api-for-ide:$kotlinVersion") { isTransitive = false }
+    implementation("org.jetbrains.kotlin:analysis-api-k2-for-ide:$kotlinVersion") { isTransitive = false }
+    implementation("org.jetbrains.kotlin:analysis-api-platform-interface-for-ide:$kotlinVersion") { isTransitive = false }
+    implementation("org.jetbrains.kotlin:analysis-api-impl-base-for-ide:$kotlinVersion") { isTransitive = false }
+    implementation("org.jetbrains.kotlin:analysis-api-standalone-for-ide:$kotlinVersion") { isTransitive = false }
+    implementation("org.jetbrains.kotlin:low-level-api-fir-for-ide:$kotlinVersion") { isTransitive = false }
+    implementation("org.jetbrains.kotlin:symbol-light-classes-for-ide:$kotlinVersion") { isTransitive = false }
 
     testImplementation(kotlin("test"))
 }
