@@ -1,47 +1,37 @@
 package io.github.sonarkt
 
 import com.intellij.openapi.util.Disposer
-import org.jetbrains.kotlin.cli.common.config.addKotlinSourceRoot
-import org.jetbrains.kotlin.cli.common.messages.MessageCollector
-import org.jetbrains.kotlin.cli.jvm.compiler.EnvironmentConfigFiles
-import org.jetbrains.kotlin.cli.jvm.compiler.KotlinCoreEnvironment
-import org.jetbrains.kotlin.config.CommonConfigurationKeys
-import org.jetbrains.kotlin.config.CompilerConfiguration
-import org.jetbrains.kotlin.config.JVMConfigurationKeys
-import java.io.File
+import org.jetbrains.kotlin.analysis.api.standalone.buildStandaloneAnalysisAPISession
+import org.jetbrains.kotlin.analysis.project.structure.builder.buildKtSourceModule
+import org.jetbrains.kotlin.platform.jvm.JvmPlatforms
+import java.nio.file.Paths
+import kotlin.system.exitProcess
 
 fun main() {
-    val env = createKotlinCoreEnvironment()
-    val sourceFiles = env.getSourceFiles()
+    val projectDisposable = Disposer.newDisposable("PoC")
 
-    println("Found ${sourceFiles.size} source files:")
-    sourceFiles.forEach { ktFile ->
-        println("  - ${ktFile.name}")
-    }
-}
+    val session = buildStandaloneAnalysisAPISession(projectDisposable) {
+        buildKtModuleProvider {
+            platform = JvmPlatforms.defaultJvmPlatform
 
-private fun createKotlinCoreEnvironment(): KotlinCoreEnvironment {
-    val configuration = CompilerConfiguration().apply {
-        // MessageCollector
-        put(CommonConfigurationKeys.MESSAGE_COLLECTOR_KEY, MessageCollector.NONE)
-
-        // モジュール名を設定
-        put(CommonConfigurationKeys.MODULE_NAME, "core")
-
-        // ソースルートを追加
-        addKotlinSourceRoot("/Users/haruto/Desktop/dev/oss/sonar-kt/core/src/main/kotlin")
-
-        // JDKクラスパス
-        val jdkHome = File(System.getProperty("java.home"))
-        put(JVMConfigurationKeys.JDK_HOME, jdkHome)
+            addModule(buildKtSourceModule {
+                moduleName = "core"
+                platform = JvmPlatforms.defaultJvmPlatform
+                addSourceRoot(Paths.get("/Users/haruto/Desktop/dev/oss/sonar-kt/core/src/main/kotlin"))
+            })
+        }
     }
 
-    // IntelliJのファイルシステムフォールバック
-    System.setProperty("idea.io.use.fallback", "true")
+    val ktFile = session.modulesWithFiles
+        .flatMap { it.value }
+        .filterIsInstance<org.jetbrains.kotlin.psi.KtFile>()
+        .find { it.name == "PoC1.kt" }
 
-    return KotlinCoreEnvironment.createForProduction(
-        Disposer.newDisposable(),
-        configuration,
-        EnvironmentConfigFiles.JVM_CONFIG_FILES
-    )
+    ktFile?.let {
+        val ka = KotlinAnalysis()
+        ka.perform(it)
+    }
+
+    Disposer.dispose(projectDisposable)
+    exitProcess(0)
 }
