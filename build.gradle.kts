@@ -1,22 +1,24 @@
 plugins {
-    kotlin("jvm") version "2.3.0"
+    kotlin("jvm") version "2.3.0" apply false
 }
 
-group = "io.github.mikhailhal"
-version = "1.0-SNAPSHOT"
+allprojects {
+    group = "io.github.mikhailhal"
+    version = "1.0-SNAPSHOT"
 
-repositories {
-    mavenCentral()
+    repositories {
+        mavenCentral()
+    }
 }
 
-dependencies {
-    testImplementation(kotlin("test"))
-}
+subprojects {
+    apply(plugin = "org.jetbrains.kotlin.jvm")
 
-kotlin {
-    jvmToolchain(21)
-}
+    configure<org.jetbrains.kotlin.gradle.dsl.KotlinJvmProjectExtension> {
+        jvmToolchain(21)
+    }
 
-tasks.test {
-    useJUnitPlatform()
+    tasks.withType<Test> {
+        useJUnitPlatform()
+    }
 }
