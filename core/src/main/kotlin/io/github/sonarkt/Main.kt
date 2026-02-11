@@ -76,6 +76,11 @@ fun main() {
     println("Affected tests:")
     affected2.forEach { println("  - $it") }
 
+    // === Emitter動作確認 ===
+    println("\n=== Emitter Test ===")
+    println("Output format (plain text):")
+    println(AffectedTestEmitter.emit(affected1))
+
     Disposer.dispose(projectDisposable)
     exitProcess(0)
 }
