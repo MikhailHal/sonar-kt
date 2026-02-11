@@ -9,6 +9,10 @@ import java.nio.file.Paths
 import kotlin.system.exitProcess
 
 fun main() {
+    // === Collector動作確認 ===
+    testGitDiffParser()
+    println()
+
     val projectDisposable = Disposer.newDisposable("PoC")
 
     val session = buildStandaloneAnalysisAPISession(projectDisposable) {
@@ -30,6 +34,10 @@ fun main() {
 
     println("=== Found ${ktFiles.size} Kotlin files ===")
     ktFiles.forEach { println("  - ${it.name}") }
+    println()
+
+    // === ChangedFunctionCollector動作確認 ===
+    testChangedFunctionCollector(ktFiles)
     println()
 
     // 依存グラフを構築
@@ -79,5 +87,70 @@ fun printCallers(graph: ReverseDependencyGraph, callee: String) {
         println("  (no callers found)")
     } else {
         callers.forEach { println("  - $it") }
+    }
+}
+
+/**
+ * GitDiffParserの動作確認
+ */
+fun testGitDiffParser() {
+    println("=== GitDiffParser Test ===")
+
+    // サンプルのgit diff出力（Calculator.ktのaddメソッドを変更した場合を想定）
+    val sampleDiff = """
+        diff --git a/core/src/main/kotlin/io/github/sonarkt/Calculator.kt b/core/src/main/kotlin/io/github/sonarkt/Calculator.kt
+        --- a/core/src/main/kotlin/io/github/sonarkt/Calculator.kt
+        +++ b/core/src/main/kotlin/io/github/sonarkt/Calculator.kt
+        @@ -4 +4 @@ class Calculator {
+        -    fun add(a: Int, b: Int): Int = a + b
+        +    fun add(a: Int, b: Int): Int = a + b + 0  // 変更
+        diff --git a/core/src/main/kotlin/io/github/sonarkt/Helper.kt b/core/src/main/kotlin/io/github/sonarkt/Helper.kt
+        --- a/core/src/main/kotlin/io/github/sonarkt/Helper.kt
+        +++ b/core/src/main/kotlin/io/github/sonarkt/Helper.kt
+        @@ -7,3 +7,4 @@ fun helperB() {
+        +    // コメント追加
+    """.trimIndent()
+
+    val result = GitDiffParser.parseKotlinFiles(sampleDiff)
+
+    println("Parsed ${result.size} Kotlin files:")
+    for ((path, fileDiff) in result) {
+        println("  File: $path")
+        for (range in fileDiff.changedLineRanges) {
+            println("    Changed lines: $range")
+        }
+    }
+}
+
+/**
+ * ChangedFunctionCollectorの動作確認
+ */
+fun testChangedFunctionCollector(ktFiles: List<KtFile>) {
+    println("=== ChangedFunctionCollector Test ===")
+
+    // サンプルのgit diff出力
+    // Calculator.ktの4行目(addメソッド)とHelper.ktの7-10行目(helperB関数内)を変更
+    val sampleDiff = """
+        diff --git a/src/main/kotlin/io/github/sonarkt/Calculator.kt b/src/main/kotlin/io/github/sonarkt/Calculator.kt
+        --- a/src/main/kotlin/io/github/sonarkt/Calculator.kt
+        +++ b/src/main/kotlin/io/github/sonarkt/Calculator.kt
+        @@ -4 +4 @@ class Calculator {
+        -    fun add(a: Int, b: Int): Int = a + b
+        +    fun add(a: Int, b: Int): Int = a + b + 0
+        diff --git a/src/main/kotlin/io/github/sonarkt/Helper.kt b/src/main/kotlin/io/github/sonarkt/Helper.kt
+        --- a/src/main/kotlin/io/github/sonarkt/Helper.kt
+        +++ b/src/main/kotlin/io/github/sonarkt/Helper.kt
+        @@ -7,3 +7,4 @@ fun helperB() {
+        +    // comment
+    """.trimIndent()
+
+    val collector = ChangedFunctionCollector()
+    val changedFunctions = collector.collect(sampleDiff, ktFiles)
+
+    println("Changed functions:")
+    if (changedFunctions.isEmpty()) {
+        println("  (none found)")
+    } else {
+        changedFunctions.forEach { println("  - $it") }
     }
 }
