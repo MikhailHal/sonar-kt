@@ -48,20 +48,25 @@ fun main() {
     }
     println()
 
-    // 逆引きテスト
-    println("=== Reverse Lookup Tests ===")
+    // 影響テスト特定のテスト
+    println("=== Affected Test Resolution ===")
+    val resolver = AffectedTestResolver(graph)
 
-    // Test 1: Calculator.add を呼んでいる関数は?
-    // 期待: testAdd, helperB, testCalculator
-    printCallers(graph, "io.github.sonarkt.Calculator.add")
+    // シナリオ1: Calculator.add が変更された場合
+    // 期待: testAdd (直接呼んでる), testHelper (helperB経由で間接的に影響)
+    val changedFunctions1 = setOf("io.github.sonarkt.Calculator.add")
+    val affected1 = resolver.findAffectedTests(changedFunctions1)
+    println("\nChanged: $changedFunctions1")
+    println("Affected tests:")
+    affected1.forEach { println("  - $it") }
 
-    // Test 2: helperB を呼んでいる関数は?
-    // 期待: testHelper
-    printCallers(graph, "io.github.sonarkt.helperB")
-
-    // Test 3: Calculator.<init> を呼んでいる関数は?
-    // 期待: testAdd, helperB, testCalculator
-    printCallers(graph, "io.github.sonarkt.Calculator.<init>")
+    // シナリオ2: helperB が変更された場合
+    // 期待: testHelper のみ
+    val changedFunctions2 = setOf("io.github.sonarkt.helperB")
+    val affected2 = resolver.findAffectedTests(changedFunctions2)
+    println("\nChanged: $changedFunctions2")
+    println("Affected tests:")
+    affected2.forEach { println("  - $it") }
 
     Disposer.dispose(projectDisposable)
     exitProcess(0)
