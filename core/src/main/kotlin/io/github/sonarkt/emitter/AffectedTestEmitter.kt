@@ -1,5 +1,6 @@
-package io.github.sonarkt
+package io.github.sonarkt.emitter
 
+import io.github.sonarkt.common.FunctionFqn
 import java.io.File
 
 /**

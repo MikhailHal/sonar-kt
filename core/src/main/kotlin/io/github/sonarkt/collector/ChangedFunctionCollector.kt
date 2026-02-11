@@ -1,7 +1,8 @@
-package io.github.sonarkt
+package io.github.sonarkt.collector
 
 import com.intellij.openapi.editor.Document
 import com.intellij.psi.PsiDocumentManager
+import io.github.sonarkt.common.FunctionFqn
 import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.kotlin.psi.KtNamedFunction
 import org.jetbrains.kotlin.psi.KtTreeVisitorVoid

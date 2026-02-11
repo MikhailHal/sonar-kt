@@ -1,4 +1,4 @@
-package io.github.sonarkt
+package io.github.sonarkt.processor
 
 import org.jetbrains.kotlin.analysis.api.analyze
 import org.jetbrains.kotlin.analysis.api.resolution.singleFunctionCallOrNull

@@ -1,4 +1,4 @@
-package io.github.sonarkt
+package io.github.sonarkt.collector
 
 /**
  * git diff --unified=0 の出力をパースする

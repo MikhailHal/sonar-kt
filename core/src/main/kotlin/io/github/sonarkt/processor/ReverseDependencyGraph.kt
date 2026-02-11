@@ -1,10 +1,6 @@
-package io.github.sonarkt
+package io.github.sonarkt.processor
 
-/**
- * 関数の完全修飾名 (Fully Qualified Name)
- * 例: "io.github.sonarkt.Calculator.add"
- */
-typealias FunctionFqn = String
+import io.github.sonarkt.common.FunctionFqn
 
 /**
  * 逆方向依存グラフ

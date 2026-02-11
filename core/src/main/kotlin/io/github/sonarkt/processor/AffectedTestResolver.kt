@@ -1,4 +1,6 @@
-package io.github.sonarkt
+package io.github.sonarkt.processor
+
+import io.github.sonarkt.common.FunctionFqn
 
 /**
  * 変更された関数から影響を受けるテストを特定する

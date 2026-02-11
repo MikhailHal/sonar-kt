@@ -1,6 +1,12 @@
 package io.github.sonarkt
 
 import com.intellij.openapi.util.Disposer
+import io.github.sonarkt.collector.ChangedFunctionCollector
+import io.github.sonarkt.collector.GitDiffParser
+import io.github.sonarkt.emitter.AffectedTestEmitter
+import io.github.sonarkt.processor.AffectedTestResolver
+import io.github.sonarkt.processor.GraphBuilder
+import io.github.sonarkt.processor.ReverseDependencyGraph
 import org.jetbrains.kotlin.analysis.api.standalone.buildStandaloneAnalysisAPISession
 import org.jetbrains.kotlin.analysis.project.structure.builder.buildKtSourceModule
 import org.jetbrains.kotlin.platform.jvm.JvmPlatforms
@@ -23,6 +29,8 @@ fun main() {
                 moduleName = "core"
                 platform = JvmPlatforms.defaultJvmPlatform
                 addSourceRoot(Paths.get("/Users/haruto/Desktop/dev/oss/sonar-kt/core/src/main/kotlin"))
+                // サンドボックス（テスト用サンプルコード）
+                addSourceRoot(Paths.get("/Users/haruto/Desktop/dev/oss/sonar-kt/core/src/test/resources/sandbox"))
             })
         }
     }
@@ -103,15 +111,15 @@ fun testGitDiffParser() {
 
     // サンプルのgit diff出力（Calculator.ktのaddメソッドを変更した場合を想定）
     val sampleDiff = """
-        diff --git a/core/src/main/kotlin/io/github/sonarkt/Calculator.kt b/core/src/main/kotlin/io/github/sonarkt/Calculator.kt
-        --- a/core/src/main/kotlin/io/github/sonarkt/Calculator.kt
-        +++ b/core/src/main/kotlin/io/github/sonarkt/Calculator.kt
+        diff --git a/src/test/resources/sandbox/Calculator.kt b/src/test/resources/sandbox/Calculator.kt
+        --- a/src/test/resources/sandbox/Calculator.kt
+        +++ b/src/test/resources/sandbox/Calculator.kt
         @@ -4 +4 @@ class Calculator {
         -    fun add(a: Int, b: Int): Int = a + b
         +    fun add(a: Int, b: Int): Int = a + b + 0  // 変更
-        diff --git a/core/src/main/kotlin/io/github/sonarkt/Helper.kt b/core/src/main/kotlin/io/github/sonarkt/Helper.kt
-        --- a/core/src/main/kotlin/io/github/sonarkt/Helper.kt
-        +++ b/core/src/main/kotlin/io/github/sonarkt/Helper.kt
+        diff --git a/src/test/resources/sandbox/Helper.kt b/src/test/resources/sandbox/Helper.kt
+        --- a/src/test/resources/sandbox/Helper.kt
+        +++ b/src/test/resources/sandbox/Helper.kt
         @@ -7,3 +7,4 @@ fun helperB() {
         +    // コメント追加
     """.trimIndent()
@@ -136,15 +144,15 @@ fun testChangedFunctionCollector(ktFiles: List<KtFile>) {
     // サンプルのgit diff出力
     // Calculator.ktの4行目(addメソッド)とHelper.ktの7-10行目(helperB関数内)を変更
     val sampleDiff = """
-        diff --git a/src/main/kotlin/io/github/sonarkt/Calculator.kt b/src/main/kotlin/io/github/sonarkt/Calculator.kt
-        --- a/src/main/kotlin/io/github/sonarkt/Calculator.kt
-        +++ b/src/main/kotlin/io/github/sonarkt/Calculator.kt
+        diff --git a/src/test/resources/sandbox/Calculator.kt b/src/test/resources/sandbox/Calculator.kt
+        --- a/src/test/resources/sandbox/Calculator.kt
+        +++ b/src/test/resources/sandbox/Calculator.kt
         @@ -4 +4 @@ class Calculator {
         -    fun add(a: Int, b: Int): Int = a + b
         +    fun add(a: Int, b: Int): Int = a + b + 0
-        diff --git a/src/main/kotlin/io/github/sonarkt/Helper.kt b/src/main/kotlin/io/github/sonarkt/Helper.kt
-        --- a/src/main/kotlin/io/github/sonarkt/Helper.kt
-        +++ b/src/main/kotlin/io/github/sonarkt/Helper.kt
+        diff --git a/src/test/resources/sandbox/Helper.kt b/src/test/resources/sandbox/Helper.kt
+        --- a/src/test/resources/sandbox/Helper.kt
+        +++ b/src/test/resources/sandbox/Helper.kt
         @@ -7,3 +7,4 @@ fun helperB() {
         +    // comment
     """.trimIndent()

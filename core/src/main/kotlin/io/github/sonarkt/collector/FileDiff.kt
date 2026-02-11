@@ -1,4 +1,4 @@
-package io.github.sonarkt
+package io.github.sonarkt.collector
 
 /**
  * 1ファイル分のdiff情報を表すデータクラス

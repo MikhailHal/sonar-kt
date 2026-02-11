@@ -1,4 +1,4 @@
-package io.github.sonarkt
+package io.github.sonarkt.collector
 
 /**
  * 行範囲を表す値クラス
