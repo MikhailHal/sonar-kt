@@ -64,7 +64,6 @@ class ChangedFunctionCollector {
                         val isChangedFunction = fileDiff.overlapsWithRange(functionRange)
                         if (isChangedFunction) {
                             changedFunctions.add(fqn)
-                            println("  Changed function: $fqn ($functionRange)")
                         }
                     }
                 }

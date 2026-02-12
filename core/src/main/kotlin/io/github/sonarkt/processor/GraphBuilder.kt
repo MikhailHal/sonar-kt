@@ -54,11 +54,7 @@ class GraphBuilder {
             return
         }
 
-        val callerFqn = callerFunction.fqName?.asString()
-        if (callerFqn == null) {
-            println("  [WARN] Could not get FQN for caller: ${callerFunction.name}")
-            return
-        }
+        val callerFqn = callerFunction.fqName?.asString() ?: return
 
         // 2. callee を解決: Analysis API で関数シンボルを取得
         analyze(expression) {
@@ -68,9 +64,7 @@ class GraphBuilder {
             if (functionSymbol != null) {
                 val calleeFqn = functionSymbol.callableId?.asSingleFqName()?.asString()
                 if (calleeFqn != null) {
-                    // 3. グラフにエッジを追加
                     graph.addEdge(callerFqn, calleeFqn)
-                    println("  Edge: $callerFqn -> $calleeFqn")
                 }
             }
         }
