@@ -63,4 +63,9 @@ class GraphBuilderTest {
 
         assertTrue(graph.getAllEdges().isEmpty())
     }
+
+    @Test
+    fun `intentional failure for CI test`() {
+        assertTrue(false, "This test is intentionally failing to verify CI detection")
+    }
 }
