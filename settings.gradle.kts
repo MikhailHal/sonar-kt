@@ -4,3 +4,4 @@ plugins {
 rootProject.name = "sonar-kt"
 
 include(":core")
+include("plugin")
