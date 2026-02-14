@@ -1,0 +1,64 @@
+name: Check Kotlin Analysis API Updates
+
+on:
+  schedule:
+    - cron: '0 9 * * *'  # 毎日 18:00 JST
+  workflow_dispatch:  # 手動実行用
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Get current version from build.gradle.kts
+        id: current
+        run: |
+          CURRENT=$(grep 'val kotlinVersion' core/build.gradle.kts | sed 's/.*"\(.*\)".*/\1/')
+          echo "version=$CURRENT" >> $GITHUB_OUTPUT
+          echo "Current version: $CURRENT"
+
+      - name: Check Maven Central for latest version
+        id: latest
+        run: |
+          LATEST=$(curl -s "https://search.maven.org/solrsearch/select?q=g:org.jetbrains.kotlin+AND+a:analysis-api-for-ide&rows=1&wt=json" | jq -r '.response.docs[0].latestVersion')
+          echo "version=$LATEST" >> $GITHUB_OUTPUT
+          echo "Latest version: $LATEST"
+
+      - name: Compare versions
+        id: compare
+        run: |
+          if [ "${{ steps.current.outputs.version }}" != "${{ steps.latest.outputs.version }}" ]; then
+            echo "updated=true" >> $GITHUB_OUTPUT
+            echo "New version available!"
+          else
+            echo "updated=false" >> $GITHUB_OUTPUT
+            echo "Already up to date"
+          fi
+
+      - name: Notify Discord
+        if: steps.compare.outputs.updated == 'true'
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+        run: |
+          curl -X POST "$DISCORD_WEBHOOK" \
+            -H "Content-Type: application/json" \
+            -d "{
+              \"embeds\": [{
+                \"title\": \"Kotlin Analysis API Update\",
+                \"description\": \"New version available!\",
+                \"color\": 7506394,
+                \"fields\": [
+                  {\"name\": \"Current\", \"value\": \"\`${{ steps.current.outputs.version }}\`\", \"inline\": true},
+                  {\"name\": \"Latest\", \"value\": \"\`${{ steps.latest.outputs.version }}\`\", \"inline\": true}
+                ],
+                \"footer\": {\"text\": \"sonar-kt\"}
+              }]
+            }"
+
+      - name: Fail if update available
+        if: steps.compare.outputs.updated == 'true'
+        run: |
+          echo "::error::Kotlin Analysis API update available: ${{ steps.current.outputs.version }} -> ${{ steps.latest.outputs.version }}"
+          exit 1

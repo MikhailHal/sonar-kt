@@ -8,6 +8,7 @@
     <a href="LICENSE"><img src="https://img.shields.io/badge/License-Apache%202.0-blue.svg?style=flat-square" alt="License"></a>
     <a href="https://kotlinlang.org"><img src="https://img.shields.io/badge/Kotlin-2.1.20-7F52FF.svg?style=flat-square&logo=kotlin&logoColor=white" alt="Kotlin"></a>
     <a href="#"><img src="https://img.shields.io/github/actions/workflow/status/MikhailHal/sonar-kt/ci.yml?style=flat-square&logo=github" alt="CI"></a>
+    <a href="https://github.com/MikhailHal/sonar-kt/actions/workflows/check-ka-api.yml"><img src="https://img.shields.io/github/actions/workflow/status/MikhailHal/sonar-kt/check-ka-api.yml?style=flat-square&logo=kotlin&logoColor=white&label=KA%20API" alt="Kotlin Analysis API Status"></a>
   </p>
 </p>
 
