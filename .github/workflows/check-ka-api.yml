@@ -19,12 +19,13 @@ jobs:
           echo "version=$CURRENT" >> $GITHUB_OUTPUT
           echo "Current version: $CURRENT"
 
-      - name: Check Maven Central for latest version
+      - name: Check Maven Central for latest Kotlin version
         id: latest
         run: |
-          LATEST=$(curl -s "https://search.maven.org/solrsearch/select?q=g:org.jetbrains.kotlin+AND+a:analysis-api-for-ide&rows=1&wt=json" | jq -r '.response.docs[0].latestVersion')
+          # Analysis API versions follow Kotlin versions, so we check kotlin-compiler
+          LATEST=$(curl -s "https://search.maven.org/solrsearch/select?q=g:org.jetbrains.kotlin+AND+a:kotlin-compiler&rows=1&wt=json" | jq -r '.response.docs[0].latestVersion')
           echo "version=$LATEST" >> $GITHUB_OUTPUT
-          echo "Latest version: $LATEST"
+          echo "Latest Kotlin version: $LATEST"
 
       - name: Compare versions
         id: compare
